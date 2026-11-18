@@ -1,0 +1,45 @@
+{
+  "symbol": "NQ",
+  "last_price": 27215.75,
+  "candle_time": "2026-11-18T06:30:00+00:00",
+  "updated_at": "2026-11-18T06:32:07.189320+00:00",
+  "analysis": {
+    "last_price": 27215.75,
+    "timestamp": "2026-11-18T06:30:00+00:00",
+    "bullish_fvg": false,
+    "bearish_fvg": true,
+    "bsl_sweep": false,
+    "ssl_sweep": false,
+    "bullish_mss": false,
+    "bearish_mss": false,
+    "displacement": false,
+    "prior_high": 27231.5,
+    "prior_low": 27179.25
+  },
+  "smt": {
+    "bullish": false,
+    "bearish": false
+  },
+  "signals": {
+    "long": {
+      "direction": "LONG",
+      "score": 0,
+      "reasons": [],
+      "status": "NO TRADE",
+      "levels": {
+        "status": "NO TRADE"
+      }
+    },
+    "short": {
+      "direction": "SHORT",
+      "score": 20,
+      "reasons": [
+        "Fair Value Gap"
+      ],
+      "status": "NO TRADE",
+      "levels": {
+        "status": "NO TRADE"
+      }
+    }
+  }
+}

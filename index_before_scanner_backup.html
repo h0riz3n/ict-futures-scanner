@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ICT Futures AI Scanner — V3</title>
+<style>
+:root{--bg:#090d14;--panel:#111925;--panel2:#0d1520;--line:#223247;--text:#e8eef7;--muted:#91a2b8;--green:#37d39a;--red:#ff6878;--amber:#f4bd57;--blue:#7eb6ff}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#0a1019,#080c12);color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:22px max(20px,calc((100vw - 1320px)/2));border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h1{font-size:21px;margin:0;letter-spacing:.2px}h2{font-size:15px;margin:0 0 12px}p{margin:6px 0;color:var(--muted)}.wrap{max-width:1320px;margin:auto;padding:20px}
+.pill{border:1px solid var(--line);border-radius:999px;padding:5px 10px;color:var(--muted);font-size:12px}.pill.warn{color:var(--amber);border-color:#6c5126}.pill.good{color:var(--green);border-color:#1e604a}
+.grid{display:grid;grid-template-columns:1.35fr .85fr;gap:16px}.card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}.muted{color:var(--muted)}.small{font-size:12px}.big{font-size:28px;font-weight:750;letter-spacing:-.8px}.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}
+button,.filebtn,select,input{background:#172436;color:var(--text);border:1px solid #30445e;border-radius:8px;padding:9px 11px;font:inherit}button{cursor:pointer}button:hover,.filebtn:hover{border-color:var(--blue)}button.primary{background:#173d38;border-color:#247c65}.filebtn{display:inline-block;cursor:pointer}input[type=file]{display:none}select{min-width:100px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.metric{background:#0c1420;border:1px solid var(--line);border-radius:10px;padding:12px}.metric b{display:block;font-size:18px;margin-top:3px}
+.notice{padding:12px;border-radius:10px;background:#251d10;border:1px solid #624b23;color:#f0d49b;margin:12px 0}
+.goodbox{background:#0d211d;border:1px solid #205743;color:#b8f1dc;padding:12px;border-radius:10px}
+.badbox{background:#27141a;border:1px solid #69303a;color:#ffc3ca;padding:12px;border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:9px 7px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}
+.signal{border:1px solid var(--line);border-radius:12px;padding:14px;margin:10px 0;background:#0c1420}.signal.long{border-left:3px solid var(--green)}.signal.short{border-left:3px solid var(--red)}
+.levels{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.level{background:#121f2e;padding:9px;border-radius:8px}.level span{display:block;color:var(--muted);font-size:11px}.level b{font-variant-numeric:tabular-nums}
+ul{padding-left:18px;margin:8px 0}li{margin:4px 0}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#chart{height:440px;border-radius:10px;overflow:hidden;background:#080d14}#log{max-height:220px;overflow:auto;font:12px/1.6 ui-monospace,monospace;color:#aebdd0;white-space:pre-wrap}
+footer{padding:20px;color:var(--muted);font-size:12px;text-align:center}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}#chart{height:360px}}
+@media(max-width:520px){.wrap{padding:12px}.levels{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div><h1>ICT Futures AI Scanner <span class="muted">/ V3</span></h1><p>NQ · MNQ · ES confirmation · ICT + momentum / volume filters</p></div><div class="row"><span id="feedBadge" class="pill warn">LIVE FEED: NOT CONNECTED</span><span class="pill">Manual execution only</span></div></header>
+<main class="wrap">
+<div class="notice"><b>Live-data honesty:</b> This build does not pretend a public chart embed is a data feed. TradingView's embedded chart is for viewing; this app cannot read its candles. Free, dependable real-time CME NQ/ES API access has not been verified. Until a permitted live feed is connected, uploaded CSVs are analyzed as snapshots—not live signals.</div>
+<div class="grid">
+<section class="card">
+ <div class="row between"><h2>Market chart</h2><div class="row"><select id="symbol"><option value="CME_MINI:NQ1!">NQ1!</option><option value="CME_MINI:MNQ1!">MNQ1!</option><option value="CME_MINI:ES1!">ES1!</option><option value="CME_MINI:MES1!">MES1!</option></select><select id="tf"><option>1</option><option>3</option><option selected>5</option><option>15</option><option>60</option><option>240</option><option>D</option></select></div></div>
+ <div id="chart"></div><p class="small">Chart embed is visual only. To scan prices, import OHLCV data below. Do not treat chart movement as an app-generated alert.</p>
+ <div class="row" style="margin-top:12px"><label class="filebtn">Import NQ/MNQ OHLCV CSV<input id="nqFile" type="file" accept=".csv"></label><label class="filebtn">Import ES OHLCV CSV<input id="esFile" type="file" accept=".csv"></label><button id="analyze" class="primary">Analyze imported data</button><button id="clear">Clear data</button></div>
+ <p class="small">CSV columns supported: time, open, high, low, close, volume (header names may vary). Use matching timestamps for NQ and ES SMT comparison.</p>
+</section>
+<aside class="card">
+ <h2>Scanner status</h2><div class="row between"><span class="muted">Data state</span><b id="dataState" class="amber">Waiting for data</b></div>
+ <div class="row between"><span class="muted">NQ candles</span><b id="nqCount">0</b></div>
+ <div class="row between"><span class="muted">ES candles</span><b id="esCount">0</b></div>
+ <div class="row between"><span class="muted">Last candle</span><b id="lastTime">—</b></div>
+ <div class="metrics" style="grid-template-columns:repeat(2,1fr)">
+  <div class="metric"><span class="muted small">LONG score</span><b id="longScore" class="green">—</b></div>
+  <div class="metric"><span class="muted small">SHORT score</span><b id="shortScore" class="red">—</b></div>
+ </div>
+ <div id="verdict" class="badbox">NO TRADE — waiting for imported market data.</div>
+ <p class="small">Scores are rule-confluence points, not win probabilities.</p>
+</aside>
+</div>
+<div class="grid" style="margin-top:16px">
+<section class="card"><div class="row between"><h2>Latest setup assessment</h2><span class="pill">Rule-based • not AI-trained</span></div><div id="setup"><p>Import OHLCV candles and select Analyze to calculate a setup.</p></div></section>
+<section class="card"><h2>Confirmation checklist</h2><div id="checks" class="muted">No analysis yet.</div><hr style="border:0;border-top:1px solid var(--line);margin:14px 0"><h2>Risk framework</h2><ul class="small"><li>Entry only after a confirmed displacement / structure shift.</li><li>Stop is placed beyond the sweep or structural invalidation point.</li><li>Targets use nearby liquidity; minimum planned R:R defaults to 1.5R.</li><li>Skip if entry is extended, data is stale, or long/short scores conflict.</li></ul></section>
+</div>
+<div class="card" style="margin-top:16px"><div class="row between"><h2>Alert history</h2><button id="clearLog">Clear history</button></div><div id="log">No alerts. Imported data analysis will appear here.</div></div>
+<div class="card" style="margin-top:16px"><h2>What this version can and cannot do</h2><div class="two"><div><b class="green">Implemented</b><ul><li>Long and short confluence scoring</li><li>FVG, swing sweep and MSS candidates</li><li>EMA trend, RSI momentum and relative volume checks</li><li>Basic NQ/ES swing comparison when timestamps align</li><li>Proposed entry, invalidation stop and liquidity-based targets</li><li>Browser notification permission request for analyzed setups</li></ul></div><div><b class="amber">Not yet implemented</b><ul><li>Verified free live CME data connection</li><li>Continuous live candle processing / push alerts</li><li>Full ICT 2022 or complete ICT concept recognition</li><li>True order-flow / footprint / DOM confirmation</li><li>Broker integration, automated execution or validated win-rate statistics</li></ul></div></div></div>
+</main><footer>Educational research tool only. Futures are leveraged and can cause losses exceeding initial margin. Validate every setup in replay/simulation before risking capital.</footer>
+<script src="https://s3.tradingview.com/tv.js"></script>
+<script>
+let nq=[],es=[],logLines=[];
+function chart(){if(window.TradingView){document.getElementById('chart').innerHTML='';new TradingView.widget({autosize:true,symbol:document.getElementById('symbol').value,interval:document.getElementById('tf').value,timezone:'America/Los_Angeles',theme:'dark',style:'1',locale:'en',toolbar_bg:'#0d1520',enable_publishing:false,hide_top_toolbar:false,allow_symbol_change:false,container_id:'chart'});}}
+document.getElementById('symbol').onchange=chart;document.getElementById('tf').onchange=chart;window.addEventListener('load',()=>setTimeout(chart,500));
+function parseCSV(text){let lines=text.trim().split(/\r?\n/);if(lines.length<3)throw Error('CSV needs a header and at least two rows.');let heads=lines[0].split(',').map(x=>x.trim().toLowerCase().replace(/[^a-z]/g,''));function idx(names){return heads.findIndex(h=>names.includes(h));}
+let ix={t:idx(['time','timestamp','datetime','date']),o:idx(['open','o']),h:idx(['high','h']),l:idx(['low','l']),c:idx(['close','last','c']),v:idx(['volume','vol','v'])};if([ix.o,ix.h,ix.l,ix.c].some(x=>x<0))throw Error('Could not find open/high/low/close columns.');
+return lines.slice(1).map(line=>{let a=line.split(',');return {t:ix.t>=0?a[ix.t].trim():'',o:+a[ix.o],h:+a[ix.h],l:+a[ix.l],c:+a[ix.c],v:ix.v>=0?+a[ix.v]||0:0};}).filter(x=>[x.o,x.h,x.l,x.c].every(Number.isFinite)).sort((a,b)=>String(a.t).localeCompare(String(b.t)));}
+function ema(arr,n){let k=2/(n+1),out=[];arr.forEach((x,i)=>out.push(i?x*k+out[i-1]*(1-k):x));return out;}
+function rsi(closes,n=14){if(closes.length<n+1)return 50;let up=0,dn=0;for(let i=closes.length-n;i<closes.length;i++){let d=closes[i]-closes[i-1];if(d>0)up+=d;else dn-=d;}return dn===0?100:100-100/(1+(up/n)/(dn/n));}
+function analyze(data,other){if(data.length<30)throw Error('Please import at least 30 candles for a meaningful scan.');let n=data.length,last=n-1,x=data[last],prev=data[last-1],cl=data.map(z=>z.c),e9=ema(cl,9),e21=ema(cl,21),e50=ema(cl,50),r=rsi(cl),avgVol=data.slice(Math.max(0,n-21),n-1).reduce((s,z)=>s+z.v,0)/Math.min(20,n-1),relVol=avgVol?x.v/avgVol:0;
+let look=data.slice(Math.max(0,n-21),n-1),swingHigh=Math.max(...look.map(z=>z.h)),swingLow=Math.min(...look.map(z=>z.l));
+let sweepLow=prev.l<swingLow&&x.c>swingLow, sweepHigh=prev.h>swingHigh&&x.c<swingHigh;
+let mssUp=x.c>Math.max(...data.slice(n-6,n-1).map(z=>z.h)),mssDn=x.c<Math.min(...data.slice(n-6,n-1).map(z=>z.l));
+let range=x.h-x.l,body=Math.abs(x.c-x.o),atr=data.slice(Math.max(0,n-15),n).reduce((s,z)=>s+(z.h-z.l),0)/Math.min(15,n);
+let displacement=body>atr*.65&&range>0&&body/range>.6;
+let bullFvg=n>=3&&data[n-1].l>data[n-3].h, bearFvg=n>=3&&data[n-1].h<data[n-3].l;
+let trendUp=e9[last]>e21[last]&&e21[last]>e50[last],trendDn=e9[last]<e21[last]&&e21[last]<e50[last];
+let long=0,short=0,L=[],S=[];
+function add(cond,pts,side,msg){if(cond){if(side==='L'){long+=pts;L.push(msg)}else{short+=pts;S.push(msg)}}}
+add(trendUp,15,'L','9/21/50 EMA bullish alignment');add(trendDn,15,'S','9/21/50 EMA bearish alignment');
+add(r>50&&r<72,8,'L','RSI bullish momentum without extreme reading');add(r<50&&r>28,8,'S','RSI bearish momentum without extreme reading');
+add(relVol>=1.2,8,'L','Relative volume expansion (neutral direction)');add(relVol>=1.2,8,'S','Relative volume expansion (neutral direction)');
+add(sweepLow,18,'L','Sell-side sweep candidate');add(sweepHigh,18,'S','Buy-side sweep candidate');
+add(mssUp,15,'L','Bullish MSS candidate');add(mssDn,15,'S','Bearish MSS candidate');
+add(displacement&&x.c>x.o,12,'L','Bullish displacement candidate');add(displacement&&x.c<x.o,12,'S','Bearish displacement candidate');
+add(bullFvg,10,'L','Bullish FVG candidate');add(bearFvg,10,'S','Bearish FVG candidate');
+let smt='Not evaluated (matching ES data required)';if(other&&other.length>=10){let match=other.find(z=>z.t===x.t);if(match){let oi=other.indexOf(match),op=other[Math.max(0,oi-5)];let nqLower=x.l<data[Math.max(0,n-6)].l,esNotLower=match.l>=op.l;let nqHigher=x.h>data[Math.max(0,n-6)].h,esNotHigher=match.h<=op.h;if(nqLower&&esNotLower){long+=12;L.push('NQ/ES bullish SMT candidate');smt='Bullish SMT candidate'}else if(nqHigher&&esNotHigher){short+=12;S.push('NQ/ES bearish SMT candidate');smt='Bearish SMT candidate'}else smt='No SMT condition detected';} }
+let side=long>=65&&long-short>=12?'LONG':short>=65&&short-long>=12?'SHORT':'NO TRADE';let entry=x.c,stop,target1,target2,rr;
+if(side==='LONG'){stop=Math.min(x.l,sweepLow?prev.l:x.l)-Math.max(atr*.12,.25);let risk=entry-stop;target1=entry+risk*1.5;target2=Math.max(swingHigh,entry+risk*2.5);rr=(target2-entry)/risk;}
+else if(side==='SHORT'){stop=Math.max(x.h,sweepHigh?prev.h:x.h)+Math.max(atr*.12,.25);let risk=stop-entry;target1=entry-risk*1.5;target2=Math.min(swingLow,entry-risk*2.5);rr=(entry-target2)/risk;}
+return {side,long,short,L,S,r,relVol,trendUp,trendDn,sweepLow,sweepHigh,mssUp,mssDn,displacement,bullFvg,bearFvg,smt,entry,stop,target1,target2,rr,t:x.t||'timestamp unavailable',close:x.c};}
+function fmt(x){return Number.isFinite(x)?x.toFixed(2):'—'}
+function log(s){logLines.unshift(new Date().toLocaleTimeString()+'  '+s);document.getElementById('log').textContent=logLines.slice(0,50).join('\n');}
+function run(){try{let a=analyze(nq,es);document.getElementById('dataState').textContent='Imported snapshot';document.getElementById('dataState').className='green';document.getElementById('nqCount').textContent=nq.length;document.getElementById('esCount').textContent=es.length;document.getElementById('lastTime').textContent=a.t;document.getElementById('longScore').textContent=a.long+'/100';document.getElementById('shortScore').textContent=a.short+'/100';
+let v=document.getElementById('verdict');v.className=a.side==='LONG'?'goodbox':a.side==='SHORT'?'badbox':'notice';v.textContent=a.side==='NO TRADE'?'NO TRADE — no sufficiently strong directional confluence.':a.side+' SETUP CANDIDATE — imported snapshot only; not a live alert.';
+let items=a.side==='LONG'?a.L:a.side==='SHORT'?a.S:[...a.L,...a.S];let html='<div class="row between"><span class="big '+(a.side==='LONG'?'green':a.side==='SHORT'?'red':'amber')+'">'+a.side+'</span><b>Confluence '+Math.max(a.long,a.short)+'/100</b></div><p>Last close: '+fmt(a.close)+' · RSI: '+fmt(a.r)+' · Relative volume: '+fmt(a.relVol)+'x · '+a.smt+'</p>';
+if(a.side!=='NO TRADE')html+='<div class="levels"><div class="level"><span>Proposed entry</span><b>'+fmt(a.entry)+'</b></div><div class="level"><span>Invalidation stop</span><b>'+fmt(a.stop)+'</b></div><div class="level"><span>Target 1 (1.5R)</span><b>'+fmt(a.target1)+'</b></div><div class="level"><span>Target 2</span><b>'+fmt(a.target2)+'</b></div></div><p class="small">Indicative levels from the final imported candle. They are not executable orders. Confirm spread, tick size, contract month, slippage and nearby liquidity before use.</p>';
+html+='<h3 class="small">Why the scanner scored this setup</h3><ul>'+items.map(z=>'<li>'+z+'</li>').join('')+'</ul>';document.getElementById('setup').innerHTML=html;
+document.getElementById('checks').innerHTML='<ul><li>EMA trend: '+(a.trendUp?'Bullish':a.trendDn?'Bearish':'Mixed')+'</li><li>RSI: '+fmt(a.r)+'</li><li>Relative volume: '+fmt(a.relVol)+'x average</li><li>Sell-side sweep: '+(a.sweepLow?'Candidate':'No')+'</li><li>Buy-side sweep: '+(a.sweepHigh?'Candidate':'No')+'</li><li>Bullish MSS: '+(a.mssUp?'Candidate':'No')+'</li><li>Bearish MSS: '+(a.mssDn?'Candidate':'No')+'</li><li>Displacement: '+(a.displacement?'Candidate':'No')+'</li><li>FVG: '+(a.bullFvg?'Bullish':a.bearFvg?'Bearish':'None')+'</li><li>SMT: '+a.smt+'</li></ul>';
+log(a.side+' candidate | long '+a.long+' | short '+a.short+' | close '+fmt(a.close));if(a.side!=='NO TRADE'&&'Notification'in window&&Notification.permission==='granted')new Notification('ICT '+a.side+' setup candidate',{body:'Entry '+fmt(a.entry)+' · Stop '+fmt(a.stop)+' · T1 '+fmt(a.target1)}); }catch(e){alert(e.message)}}
+document.getElementById('nqFile').onchange=async e=>{if(e.target.files[0])try{nq=parseCSV(await e.target.files[0].text());document.getElementById('nqCount').textContent=nq.length;log('Imported NQ CSV: '+nq.length+' candles')}catch(err){alert(err.message)}};
+document.getElementById('esFile').onchange=async e=>{if(e.target.files[0])try{es=parseCSV(await e.target.files[0].text());document.getElementById('esCount').textContent=es.length;log('Imported ES CSV: '+es.length+' candles')}catch(err){alert(err.message)}};
+document.getElementById('analyze').onclick=run;document.getElementById('clear').onclick=()=>{nq=[];es=[];document.getElementById('dataState').textContent='Waiting for data';document.getElementById('setup').innerHTML='<p>Import OHLCV candles and select Analyze to calculate a setup.</p>';document.getElementById('checks').textContent='No analysis yet.';document.getElementById('verdict').textContent='NO TRADE — waiting for imported market data.';document.getElementById('nqCount').textContent='0';document.getElementById('esCount').textContent='0';document.getElementById('longScore').textContent='—';document.getElementById('shortScore').textContent='—';};
+document.getElementById('clearLog').onclick=()=>{logLines=[];document.getElementById('log').textContent='No alerts.'};
+if('Notification'in window&&Notification.permission==='default'){let b=document.createElement('button');b.textContent='Enable browser notifications';b.onclick=()=>Notification.requestPermission();document.querySelector('header .row').appendChild(b);}
+</script>
+</body></html>
